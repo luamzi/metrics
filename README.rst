@@ -1,4 +1,4 @@
-Sample Module Repository
+Cluster Metrics packed
 ========================
 
 This simple project is an example repo for Python projects.
