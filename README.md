@@ -1,6 +1,6 @@
-# Project Title
+# Cluster Metrics
 
-One Paragraph of project description goes here
+A simple colection of functions to evaluete the quality of a clustering
 
 ## Cluster Metrics
 
