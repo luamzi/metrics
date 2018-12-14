@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .context import sample
+from .context import metrics
 
 import unittest
 
@@ -8,8 +8,8 @@ import unittest
 class BasicTestSuite(unittest.TestCase):
     """Basic test cases."""
 
-    def test_absolute_truth_and_meaning(self):
-        assert True
+    def test_upper(self):
+        self.assertEqual('foo'.upper(), 'FOO')
 
 
 if __name__ == '__main__':

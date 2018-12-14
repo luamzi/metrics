@@ -12,13 +12,13 @@ with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='sample',
-    version='0.1.0',
-    description='Sample package for Python-Guide.org',
+    name='metrics',
+    version='1.0.0',
+    description='Package for evaluete clusters',
     long_description=readme,
-    author='Kenneth Reitz',
-    author_email='me@kennethreitz.com',
-    url='https://github.com/kennethreitz/samplemod',
+    author='Weslley Caldas',
+    author_email='weslleylc@gmail.com',
+    url='https://github.com/weslleylc/metrics',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
