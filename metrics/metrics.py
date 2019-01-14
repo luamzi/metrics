@@ -5,6 +5,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
 from sklearn.metrics.cluster import unsupervised
+from scipy.spatial.distance import pdist
 
 
 class ClusterMetrics:
@@ -350,3 +351,62 @@ class ClusterMetrics:
         if max_number_of_clusters != None:
             self.elbow(data,max_number_of_clusters,step)
         self.silhouette_plot(distances,labels,metric= 'precomputed',fig_size = fig_size,cluster = cluster,y=y)
+
+	def get_clusters(data, labels):
+	    '''Finds the points in data that belongs to each cluster 
+	    Args:
+	        data: an array containing the data
+	        labels: an array containing the labels
+	    Returns:
+	        an array containing the points divided by cluster; each cluster points is an array
+	    '''
+	    clusters = []
+	    for i in range(len(np.unique(labels))):
+	        clusters.append(data[np.where(labels == i)])
+	    return clusters
+
+	def get_total_distances(data):
+	    '''Computes distances between every point in data
+	        and turns it into a squareform
+	    Args:
+	        data: an array containing the data
+	    Returns:
+	        an array with the pairwise distances of the data
+	    '''
+	    total_distances = pdist(data)
+	    return total_distances
+
+	def get_intracluster_distances(data, labels):
+	    '''Computes within-cluster distances
+	        and turns it into a squareform
+	    Args:
+	        data: an array containing the data
+	        labels: an array containing the labels
+	    Returns:
+	        an array with the pairwise within-cluster distances
+	    '''
+	    clusters = self.get_clusters(data, labels)
+	    intraclusters_distances = []
+	    for i in range(len(clusters)):
+	        intraclusters_distances.append(pdist(clusters[i]))
+	    return intraclusters_distances
+
+	def c_index(data, labels):
+	    '''Computes C-Index for the the given data and labels
+	    Args:
+	        data: an array containing the data
+	        labels: an array containing the labels
+	    Returns:
+	        an int number representing the computed C-Index
+	    '''
+	    intracluster_distances = self.get_intracluster_distances(data, labels)
+	    s_w = 0
+	    f_w = 0
+	    for i in range(len(intracluster_distances)):
+	        s_w = s_w + np.sum(intracluster_distances[i])
+	        f_w = f_w + len(intracluster_distances[i])
+	    sorted_distances = np.sort(pdist(data))
+	    d_sorted_distances = sorted_distances[::-1]
+	    s_min = np.sum(sorted_distances[:f_w])
+	    s_max = np.sum(d_sorted_distances[:f_w])
+	    return (s_w - s_min)/(s_max - s_min)
