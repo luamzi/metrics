@@ -3,10 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
-from scipy.spatial.distance import cdist
 from sklearn.metrics.cluster import unsupervised
-from scipy.spatial.distance import pdist
-
+from scipy.spatial.distance import cdist, pdist
 
 class ClusterMetrics:
     'Common base class for all metrics'
@@ -266,8 +264,7 @@ class ClusterMetrics:
     
         if np.size(unique_cluster_distances) > 1:
             return unique_cluster_distances[1] / max_diameter
-        else:
-            return unique_cluster_distances[0] / max_diameter
+        return unique_cluster_distances[0] / max_diameter
     
     
     def min_cluster_distances(self,labels, distances):
@@ -352,61 +349,104 @@ class ClusterMetrics:
             self.elbow(data,max_number_of_clusters,step)
         self.silhouette_plot(distances,labels,metric= 'precomputed',fig_size = fig_size,cluster = cluster,y=y)
 
-	def get_clusters(data, labels):
-	    '''Finds the points in data that belongs to each cluster 
-	    Args:
-	        data: an array containing the data
-	        labels: an array containing the labels
-	    Returns:
-	        an array containing the points divided by cluster; each cluster points is an array
-	    '''
-	    clusters = []
-	    for i in range(len(np.unique(labels))):
-	        clusters.append(data[np.where(labels == i)])
-	    return clusters
-
-	def get_total_distances(data):
-	    '''Computes distances between every point in data
-	        and turns it into a squareform
-	    Args:
-	        data: an array containing the data
-	    Returns:
-	        an array with the pairwise distances of the data
-	    '''
-	    total_distances = pdist(data)
-	    return total_distances
-
-	def get_intracluster_distances(data, labels):
-	    '''Computes within-cluster distances
-	        and turns it into a squareform
-	    Args:
-	        data: an array containing the data
-	        labels: an array containing the labels
-	    Returns:
-	        an array with the pairwise within-cluster distances
-	    '''
-	    clusters = self.get_clusters(data, labels)
-	    intraclusters_distances = []
-	    for i in range(len(clusters)):
-	        intraclusters_distances.append(pdist(clusters[i]))
-	    return intraclusters_distances
-
-	def c_index(data, labels):
-	    '''Computes C-Index for the the given data and labels
-	    Args:
-	        data: an array containing the data
-	        labels: an array containing the labels
-	    Returns:
-	        an int number representing the computed C-Index
-	    '''
-	    intracluster_distances = self.get_intracluster_distances(data, labels)
-	    s_w = 0
-	    f_w = 0
-	    for i in range(len(intracluster_distances)):
-	        s_w = s_w + np.sum(intracluster_distances[i])
-	        f_w = f_w + len(intracluster_distances[i])
-	    sorted_distances = np.sort(pdist(data))
-	    d_sorted_distances = sorted_distances[::-1]
-	    s_min = np.sum(sorted_distances[:f_w])
-	    s_max = np.sum(d_sorted_distances[:f_w])
-	    return (s_w - s_min)/(s_max - s_min)
+    def get_clusters(self, data, labels):
+        '''Finds the points in data that belongs to each cluster 
+        Args:
+            data: an array containing the data
+            labels: an array containing the labels
+        Returns:
+            an array containing the points divided by cluster; each cluster points is an array
+        '''
+        clusters = []
+        for i in range(len(np.unique(labels))):
+            clusters.append(data[np.where(labels == i)])
+        return clusters
+    
+    def get_total_distances(self, data):
+        '''Computes distances between every point in data
+            and turns it into a squareform
+        Args:
+            data: an array containing the data
+        Returns:
+            an array with the pairwise distances of the data
+        '''
+        total_distances = pdist(data)
+        return total_distances
+    
+    def get_intracluster_distances(self, data, labels):
+        '''Computes within-cluster distances
+            and turns it into a squareform
+        Args:
+            data: an array containing the data
+            labels: an array containing the labels
+        Returns:
+            an array with the pairwise within-cluster distances
+        '''
+        clusters = self.get_clusters(data, labels)
+        intraclusters_distances = []
+        for i in range(len(clusters)):
+            intraclusters_distances.append(pdist(clusters[i]))
+        return intraclusters_distances
+    
+    def c_index(self, data, labels):
+        '''Computes C-Index for the the given data and labels
+        Args:
+            data: an array containing the data
+            labels: an array containing the labels
+        Returns:
+            an int number representing the computed C-Index
+        '''
+        intracluster_distances = self.get_intracluster_distances(data, labels)
+        s_w = 0
+        f_w = 0
+        for i in range(len(intracluster_distances)):
+            s_w = s_w + np.sum(intracluster_distances[i])
+            f_w = f_w + len(intracluster_distances[i])
+        sorted_distances = np.sort(pdist(data))
+        d_sorted_distances = sorted_distances[::-1]
+        s_min = np.sum(sorted_distances[:f_w])
+        s_max = np.sum(d_sorted_distances[:f_w])
+        return (s_w - s_min)/(s_max - s_min)
+    
+    def compute_s(clusters, i):
+        '''Computes de root mean square deviation of a cluster
+        Args:
+            clusters: clusters: a list of lists,
+            in which every list contains the elements of each cluster
+            i: index of the cluster
+        Returns:
+            The dispersion of the cluster
+        '''
+        return np.std(clusters[i])
+    
+    def compute_d(i, j, centers):
+        '''Computes the euclidean distance between two given centroids
+        Args:
+            i, j: indexes of the two clusters
+            centers: a list containing the cluster centroids
+        Returns:
+            distance between clusters i and j
+        '''
+        return distance.euclidean(centers[i], centers[j])
+    
+    def davies_bouldin(clusters, centers):
+        '''Computes the Davies-Bouldin index for clustering evaluation
+        Args:
+            clusters: a list of lists,
+            in which every list contains the elements of each cluster
+            centers: a list of the centers of each cluster
+        Returns:
+            A value corresponding to the Davies-Bouldin index computed for the clusters
+        '''
+        dispersions_array = np.array([])
+        max_dispersions_array = np.array([])
+        for i in range(len(clusters)):
+            for j in range(len(clusters)):
+                if j == i:
+                    continue
+                else:
+                    dispersions_array = np.append(dispersions_array,
+                                                  (compute_s(clusters, i) +
+                                                   compute_s(clusters, j))/compute_d(i, j, centers))
+            max_dispersions_array = np.append(max_dispersions_array, max(dispersions_array))
+        return sum(max_dispersions_array)/len(clusters)
