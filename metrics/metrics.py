@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import unsupervised
-from scipy.spatial.distance import cdist, pdist
+from scipy.spatial.distance import cdist, pdist, euclidean
 
 class ClusterMetrics:
     'Common base class for all metrics'
@@ -427,7 +427,7 @@ class ClusterMetrics:
         Returns:
             distance between clusters i and j
         '''
-        return distance.euclidean(centers[i], centers[j])
+        return euclidean(centers[i], centers[j])
     
     def davies_bouldin(clusters, centers):
         '''Computes the Davies-Bouldin index for clustering evaluation
