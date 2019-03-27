@@ -362,6 +362,34 @@ class ClusterMetrics:
             clusters.append(data[np.where(labels == i)])
         return clusters
     
+    def centroids(data, labels, clusters = True):
+        '''Computes clusters centroids or the whole data centroid. 
+        
+        Args:
+            data: a list containing all the points
+            labels: a list containing the labels for each of the data points
+            clusters: a boolean:
+                if clusters is True, then the function returns 
+                    a list with the centroids for each cluster
+                if clusters is False, then the function returns
+                    the centroid for the whole data, without considering
+                    the clusters
+        Returns:
+            a list containing the centroids of each cluster
+            or the whole data centroid
+        '''
+        centers = []
+        if clusters == False:
+            return np.mean(data)
+        
+        for j in range(len(np.unique(labels))):
+            cluster_centroid = []
+            cluster = data[np.where(labels == j)]
+            for i in range(cluster.shape[1]):
+                cluster_centroid.append(np.mean(cluster[:,i]))
+            centers.append(cluster_centroid)
+        return centers
+    
     def get_total_distances(self, data):
         '''Computes distances between every point in data
             and turns it into a squareform
@@ -411,7 +439,7 @@ class ClusterMetrics:
     def compute_s(clusters, i):
         '''Computes de root mean square deviation of a cluster
         Args:
-            clusters: clusters: a list of lists,
+            clusters: a list of lists,
             in which every list contains the elements of each cluster
             i: index of the cluster
         Returns:
@@ -429,7 +457,7 @@ class ClusterMetrics:
         '''
         return euclidean(centers[i], centers[j])
     
-    def davies_bouldin(clusters, centers):
+    def davies_bouldin(data, labels):
         '''Computes the Davies-Bouldin index for clustering evaluation
         Args:
             clusters: a list of lists,
@@ -438,6 +466,8 @@ class ClusterMetrics:
         Returns:
             A value corresponding to the Davies-Bouldin index computed for the clusters
         '''
+        clusters = get_clusters(data, labels)
+        centers = centroids(data, labels)
         dispersions_array = np.array([])
         max_dispersions_array = np.array([])
         for i in range(len(clusters)):
@@ -450,3 +480,42 @@ class ClusterMetrics:
                                                    compute_s(clusters, j))/compute_d(i, j, centers))
             max_dispersions_array = np.append(max_dispersions_array, max(dispersions_array))
         return sum(max_dispersions_array)/len(clusters)
+    
+    def calinski_harabasz(data,labels):
+        """Compute the Calinski and Harabasz score.
+            It is also known as the Variance Ratio Criterion.
+            The score is defined as ratio between the within-cluster dispersion and
+            the between-cluster dispersion.
+        Parameters:
+            X : array-like, shape (``n_samples``, ``n_features``)
+                List of ``n_features``-dimensional data points. Each row corresponds
+                to a single data point.
+            labels : array-like, shape (``n_samples``,)
+                Predicted labels for each sample.
+        Returns:
+            score : float
+            The resulting Calinski-Harabasz score.
+        """
+        
+        n_labels = len(np.unique(labels))
+        if n_labels == 1:
+            return 1
+        
+        n_samples = len(data)
+        
+        B,W = 0.,0. #extra_disp, intra_disp
+        
+        for i in range(n_labels):
+            
+            cluster_i = data[labels == i]
+            
+            mean_i = np.mean(cluster_i,axis=0) #centroid of cluster i
+            mean = np.mean(data,axis=0) #centroid of data
+            
+            B+= len(cluster_i)*np.sum((mean - mean_i)**2)
+            W+= np.sum((cluster_i - mean_i)**2)
+            
+        B = B/(n_labels - 1.)
+        W = W/(n_samples - n_labels)
+        
+        return np.mean(B/W)
